@@ -119,17 +119,18 @@
   for (let lat = -60; lat <= 60; lat += 30) rings.push(Array.from({ length: 73 }, (_, i) => vec(lat, i * 5)));
   for (let lon = 0; lon < 360; lon += 30) rings.push(Array.from({ length: 37 }, (_, i) => vec(i * 5 - 90, lon)));
   const city = { busan: vec(35.18, 129.08), bkk: vec(13.76, 100.5), kul: vec(3.14, 101.69) };
-  const arc = (a, b) => {
+  const arc = (a, b, lift = .16) => {
     const w = Math.acos(a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
     return Array.from({ length: 61 }, (_, i) => {
-      const t = i / 60, k = 1 + Math.sin(Math.PI * t) * .16;
+      const t = i / 60, k = 1 + Math.sin(Math.PI * t) * lift;
       return a.map((v, j) => (v * Math.sin((1 - t) * w) + b[j] * Math.sin(t * w)) / Math.sin(w) * k);
     });
   };
   const arcs = [arc(city.busan, city.bkk), arc(city.busan, city.kul)];
-  const wishes = [['TOKYO', 35.68, 139.69, 10, 4], ['SYDNEY', -33.87, 151.21, 9, 4], ['DUBAI', 25.2, 55.27, -22, 20],
-    ['PARIS', 48.86, 2.35, -20, -10], ['NEW YORK', 40.71, -74.01, -30, -10], ['LOS ANGELES', 34.05, -118.24, -40, 20]]
-    .map(([name, lat, lon, dx, dy]) => ({ name, p: vec(lat, lon), dx, dy, a: arc(city.busan, vec(lat, lon)) }));
+  const wishes = [['TOKYO', 35.68, 139.69, 8, 12], ['GUAM', 13.44, 144.79, 8, 4], ['SYDNEY', -33.87, 151.21, -20, 18],
+    ['DUBAI', 25.2, 55.27, -18, 18], ['PARIS', 48.86, 2.35, -16, -9], ['VANCOUVER', 49.28, -123.12, -30, -9],
+    ['NEW YORK', 40.71, -74.01, -26, 17]]
+    .map(([name, lat, lon, dx, dy]) => ({ name, p: vec(lat, lon), dx, dy, a: arc(city.busan, vec(lat, lon), .06) }));
   const labels = [['BUSAN', city.busan, 10, -8], ['BANGKOK', city.bkk, -82, -4], ['KUALA LUMPUR', city.kul, -60, 22]];
   let yaw = -112 * rad, drag = null, size = 0, visible = false, t = 0;
   const tilt = 18 * rad;
@@ -181,14 +182,14 @@
     g.font = '600 10.5px Pretendard Variable, sans-serif';
     wishes.forEach(w => {
       const [x, y, z] = P(rot(w.p));
-      if (z < .42) return;
+      if (z < .48) return;
       g.fillStyle = '#aacdff'; g.beginPath(); g.arc(x, y, 3, 0, 7); g.fill();
       g.fillText(w.name, x + w.dx, y + w.dy);
     });
     g.font = '700 12px Pretendard Variable, sans-serif';
     labels.forEach(([name, p, dx, dy]) => {
       const [x, y, z] = P(rot(p));
-      if (z < .15) return;
+      if (z < .55) return;
       g.fillStyle = '#f5c518'; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill();
       g.fillStyle = '#fff'; g.fillText(name, x + dx, y + dy);
     });
