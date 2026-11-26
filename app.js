@@ -107,7 +107,7 @@
     el.addEventListener('pointerleave', () => el.style.transform = '');
   });
 
-  // 3D 지구본: 부산 → 방콕, 쿠알라룸푸르
+  // 3D 지구본: 실선은 다녀온 곳, 점선은 앞으로 날고 싶은 곳
   const cv = document.getElementById('globe'), g = cv.getContext('2d');
   const rad = Math.PI / 180;
   const vec = (lat, lon) => [Math.cos(lat * rad) * Math.sin(lon * rad), Math.sin(lat * rad), Math.cos(lat * rad) * Math.cos(lon * rad)];
@@ -127,8 +127,11 @@
     });
   };
   const arcs = [arc(city.busan, city.bkk), arc(city.busan, city.kul)];
+  const wishes = [['TOKYO', 35.68, 139.69, 10, 4], ['SYDNEY', -33.87, 151.21, 9, 4], ['DUBAI', 25.2, 55.27, -22, 20],
+    ['PARIS', 48.86, 2.35, -20, -10], ['NEW YORK', 40.71, -74.01, -30, -10], ['LOS ANGELES', 34.05, -118.24, -40, 20]]
+    .map(([name, lat, lon, dx, dy]) => ({ name, p: vec(lat, lon), dx, dy, a: arc(city.busan, vec(lat, lon)) }));
   const labels = [['BUSAN', city.busan, 10, -8], ['BANGKOK', city.bkk, -82, -4], ['KUALA LUMPUR', city.kul, -60, 22]];
-  let yaw = -112 * rad, drag = null, size = 0, visible = false, t = 0, offset = 0;
+  let yaw = -112 * rad, drag = null, size = 0, visible = false, t = 0;
   const tilt = 18 * rad;
   const rot = p => {
     const x = p[0] * Math.cos(yaw) + p[2] * Math.sin(yaw), z = p[2] * Math.cos(yaw) - p[0] * Math.sin(yaw);
@@ -158,10 +161,29 @@
       const [x, y, z] = P(rot(d));
       if (z > 0) { g.fillStyle = `rgba(190,210,255,${.12 + z * .4})`; g.fillRect(x, y, 1.6, 1.6); }
     });
-    arcs.forEach((a, i) => {
-      line(a, '#f5c518', 2);
-      const [x, y, z] = P(rot(a[Math.floor(((t * .006 + i * .5) % 1) * 60)]));
-      if (z > 0) { g.fillStyle = '#fff'; g.beginPath(); g.arc(x, y, 4.5, 0, 7); g.fill(); }
+    // 항로를 따라 나는 작은 비행기
+    const fly = (a, phase, color, s) => {
+      const k = Math.floor(((t * .004 + phase) % 1) * 59);
+      const [x, y, z] = P(rot(a[k])), [nx, ny] = P(rot(a[k + 1]));
+      if (z <= 0) return;
+      g.save(); g.translate(x, y); g.rotate(Math.atan2(ny - y, nx - x));
+      g.fillStyle = color; g.beginPath();
+      [[9, 0], [2, -1.8], [-2, -8], [-4, -8], [-2.5, -1.8], [-7, -1.4], [-9, -4], [-10, -4], [-9, 0],
+        [-10, 4], [-9, 4], [-7, 1.4], [-2.5, 1.8], [-4, 8], [-2, 8], [2, 1.8]]
+        .forEach(([px, py], i) => i ? g.lineTo(px * s, py * s) : g.moveTo(px * s, py * s));
+      g.closePath(); g.fill(); g.restore();
+    };
+    g.setLineDash([4, 5]);
+    wishes.forEach(w => line(w.a, 'rgba(170,205,255,.75)', 1.4));
+    g.setLineDash([]);
+    wishes.forEach((w, i) => fly(w.a, i / wishes.length, '#cfe0ff', .8));
+    arcs.forEach((a, i) => { line(a, '#f5c518', 2.4); fly(a, i * .5, '#fff', 1); });
+    g.font = '600 10.5px Pretendard Variable, sans-serif';
+    wishes.forEach(w => {
+      const [x, y, z] = P(rot(w.p));
+      if (z < .42) return;
+      g.fillStyle = '#aacdff'; g.beginPath(); g.arc(x, y, 3, 0, 7); g.fill();
+      g.fillText(w.name, x + w.dx, y + w.dy);
     });
     g.font = '700 12px Pretendard Variable, sans-serif';
     labels.forEach(([name, p, dx, dy]) => {
@@ -174,8 +196,8 @@
   const loop = () => {
     if (!visible) return;
     t++;
-    // 항로가 항상 보이도록 좌우로 천천히 흔든다
-    if (!drag) { offset *= .985; yaw = -112 * rad + Math.sin(t * .006) * .45 + offset; }
+    // 세계를 한 바퀴 도는 느낌으로 계속 회전한다
+    if (!drag) yaw -= .0045;
     draw();
     requestAnimationFrame(loop);
   };
@@ -187,7 +209,6 @@
   cv.addEventListener('pointermove', e => {
     if (!drag) return;
     yaw = drag.yaw + (e.clientX - drag.x) * .008;
-    offset = yaw - (-112 * rad + Math.sin(t * .006) * .45);
     draw();
   });
   const release = () => drag = null;

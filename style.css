@@ -222,3 +222,4 @@ dialog::backdrop{background:rgba(5,10,24,.88)}
 
 /* 문장·절 단위 줄바꿈 */
 .l{display:block;text-wrap:balance}
+.routes li.wish{border-left:4px dashed #7ea6e8}
