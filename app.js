@@ -65,6 +65,38 @@
   addEventListener('resize', onScroll);
   onScroll();
 
+  // 오른쪽 점 표시: 전체 몇 쪽 중 어디를 읽는지 보여 준다
+  const pages = [['top', '표지'], ['about', '소개'], ['route', '성장 항로'], ['safety', '안전'],
+    ['service', '서비스'], ['care', '배려·글로벌'], ['record', '성과'], ['next', '목표']]
+    .map(([id, name]) => ({ id, name, el: document.getElementById(id) }));
+  const pager = document.createElement('nav');
+  pager.className = 'pager';
+  pager.setAttribute('aria-label', '페이지 위치');
+  pager.innerHTML = pages.map((p, i) =>
+    `<a href="#${p.id}" aria-label="${i + 1}쪽 ${p.name}"><i></i><span>${p.name}</span></a>`).join('') +
+    '<b aria-hidden="true"></b>';
+  document.body.append(pager);
+  const marks = $('a', pager), num = pager.querySelector('b');
+  const onPage = () => {
+    const mark = innerHeight * .4;
+    const atEnd = scrollY + innerHeight >= document.documentElement.scrollHeight - 4;
+    let cur = 0;
+    pages.forEach((p, i) => { if (p.el.getBoundingClientRect().top <= mark) cur = i; });
+    if (atEnd) cur = pages.length - 1;
+    const r = pages[cur].el.getBoundingClientRect();
+    const read = atEnd ? 1 : Math.max(0, Math.min((mark - r.top) / r.height, 1));
+    marks.forEach((d, i) => {
+      d.classList.toggle('done', i < cur);
+      d.classList.toggle('on', i === cur);
+      i === cur ? d.setAttribute('aria-current', 'true') : d.removeAttribute('aria-current');
+    });
+    marks[cur].style.setProperty('--f', read);
+    num.innerHTML = `${cur + 1}<small>/${pages.length}</small>`;
+  };
+  addEventListener('scroll', onPage, { passive: true });
+  addEventListener('resize', onPage);
+  onPage();
+
   // 마우스에 따라 기울어지는 3D 카드
   if (!calm && matchMedia('(pointer: fine)').matches) $('[data-tilt]').forEach(el => {
     el.addEventListener('pointermove', e => {

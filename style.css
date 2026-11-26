@@ -198,3 +198,24 @@ dialog::backdrop{background:rgba(5,10,24,.88)}
   .flightpath{-webkit-mask:none;mask:none}
 }
 @media print{.js [data-reveal]{opacity:1;translate:0 0}.nav{position:static}}
+
+/* 오른쪽 페이지 점 표시 */
+.pager{position:fixed;right:14px;top:50%;translate:0 -50%;z-index:19;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:99px;background:rgba(13,27,61,.82);box-shadow:0 8px 24px -10px rgba(0,0,0,.5);color:#fff}
+.pager a{position:relative;display:flex;justify-content:center;width:18px;padding:3px 0}
+.pager i{width:9px;height:9px;border-radius:99px;background:rgba(255,255,255,.35);transition:height .3s,background .3s}
+.pager a.done i{background:var(--yellow)}
+.pager a.on i{height:28px;background:linear-gradient(var(--yellow),var(--yellow)) top/100% calc(var(--f,0) * 100%) no-repeat rgba(255,255,255,.35)}
+.pager span{position:absolute;right:30px;top:50%;translate:6px -50%;white-space:nowrap;background:var(--navy);font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s,translate .2s}
+.pager a:hover span,.pager a:focus-visible span{opacity:1;translate:0 -50%}
+.pager b{font-size:13px;line-height:1.2;margin-top:6px;text-align:center;color:var(--yellow)}
+.pager small{display:block;font-size:10px;color:#c5cbe0;font-weight:600}
+@media (max-width:860px){
+  .pager{right:2px;padding:7px 1px;gap:2px}
+  .pager a{width:14px}
+  .pager i{width:6px;height:6px}
+  .pager a.on i{height:20px}
+  .pager span{display:none}
+  .pager b{font-size:11px}
+  .pager small{font-size:9px}
+}
+@media print{.pager{display:none}}
